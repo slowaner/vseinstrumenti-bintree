@@ -39,7 +39,7 @@ func NewServer(ctx context.Context, endpoints endpoints) *mux.Router {
 		encoders.EncodeDeleteResponse,
 	)
 
-	r.Handle("/find", findHandler).Methods(http.MethodGet).Queries("val", "{val:\\d+}")
+	r.Handle("/find", findHandler).Methods(http.MethodGet).Queries("val", "{val:-?\\d+}")
 	r.Handle("/append", appendHandler).Methods(http.MethodPost).Headers("Content-Type", "application/json")
 	r.Handle("/delete", deleteHandler).Methods(http.MethodDelete).Queries("val", "{val:\\d+}")
 

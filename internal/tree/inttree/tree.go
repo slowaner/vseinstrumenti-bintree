@@ -46,7 +46,8 @@ func (t *tree) Append(val int) (err error) {
 func (t *tree) Delete(val int) (err error) {
 	var parent *node
 	cur := t.root
-	toFixCount := []*node{}
+	var toFixCount []*node
+	isRightNode := false
 	for {
 		if cur == nil {
 			err = notFoundErr
@@ -57,10 +58,8 @@ func (t *tree) Delete(val int) (err error) {
 		case cur.val == val:
 			var replacement *node
 			var cutLeafs *node
-			isRightNode := false
 			switch {
 			case cur.lNode == nil:
-				isRightNode = true
 				replacement = cur.rNode
 				cutLeafs = cur.lNode
 			case cur.rNode == nil:
@@ -70,7 +69,6 @@ func (t *tree) Delete(val int) (err error) {
 				replacement = cur.lNode
 				cutLeafs = cur.rNode
 			default:
-				isRightNode = true
 				replacement = cur.rNode
 				cutLeafs = cur.lNode
 			}
@@ -80,14 +78,14 @@ func (t *tree) Delete(val int) (err error) {
 				n.count--
 			}
 			if cutLeafs != nil {
-				replacement.count = replacement.count - cutLeafs.count
+				t.count = t.count - cutLeafs.count
 
 				q := queue.New()
 				q.Init()
 				q.PushBack(cutLeafs)
 				for q.Len() > 0 {
 					elem := q.PopFront().(*node)
-					t.appendToNode(replacement, elem)
+					t.appendToNode(replacement, elem.val)
 
 					if elem.lNode != nil {
 						q.PushBack(elem.lNode)
@@ -112,9 +110,11 @@ func (t *tree) Delete(val int) (err error) {
 		case cur.val > val:
 			parent = cur
 			cur = cur.lNode
+			isRightNode = false
 		case cur.val < val:
 			parent = cur
 			cur = cur.rNode
+			isRightNode = true
 		}
 		toFixCount = append(toFixCount, parent)
 	}
@@ -160,9 +160,12 @@ func (t *tree) append(value int) {
 }
 
 // append adds element to tree
-func (t *tree) appendToNode(currentNode *node, n *node) {
+func (t *tree) appendToNode(currentNode *node, val int) {
 	t.count++
-	n.count = 1
+	n := &node{
+		count: 1,
+		val:   val,
+	}
 	for {
 		currentNode.count++
 		if currentNode.val > n.val {
@@ -182,16 +185,6 @@ func (t *tree) appendToNode(currentNode *node, n *node) {
 		currentNode.rNode = n
 		break
 	}
-	return
-}
-
-// skip skips certain elements of tree and mutates current stack. It's used by further take mechanics
-func (t *tree) skip(skipCount int) (stack []stackNode) {
-	if t.root == nil {
-		return
-	}
-	stack = make([]stackNode, 0, 10)
-	_ = t.root.skip(skipCount, bDirRoot, &stack)
 	return
 }
 
